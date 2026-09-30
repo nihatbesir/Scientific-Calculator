@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Scientific Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .calculator-card {
+            background-color: #1e1e1e;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            border: 1px solid #333;
+        }
+        .screen {
+            background-color: #0a0a0a;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: right;
+            margin-bottom: 20px;
+            border: 1px solid #222;
+        }
+        .screen .history {
+            font-size: 0.9rem;
+            color: #888;
+            min-height: 20px;
+            overflow: hidden;
+        }
+        .screen .display {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #00ffcc;
+            word-wrap: break-word;
+            min-height: 50px;
+        }
+        .btn-calc {
+            width: 100%;
+            height: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-calc:hover {
+            opacity: 0.8;
+            transform: scale(0.98);
+        }
+        .btn-number { background-color: #2d2d2d; color: #fff; }
+        .btn-operator { background-color: #ff9500; color: #fff; }
+        .btn-sci { background-color: #3a3a3c; color: #00ffcc; }
+        .btn-action { background-color: #a5a5a5; color: #000; }
+        .btn-equal { background-color: #00ffcc; color: #000; }
+    </style>
+</head>
+<body>
+
+<div class="calculator-card">
+    <!-- Ekran Hissəsi -->
+    <div class="screen">
+        <div class="history" id="historyText"></div>
+        <div class="display" id="displayText">0</div>
+    </div>
+
+    <!-- Düymələr Şəbəkəsi -->
+    <div class="row g-2">
+        <!-- Elmi Funksiyalar -->
+        <div class="col-3"><button class="btn btn-calc btn-sci" onclick="appendFunc('sin(')">sin</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-sci" onclick="appendFunc('cos(')">cos</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-sci" onclick="appendFunc('tan(')">tan</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-sci" onclick="appendFunc('sqrt(')">√</button></div>
+
+        <div class="col-3"><button class="btn btn-calc btn-sci" onclick="appendFunc('log(')">log</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-sci" onclick="appendFunc('ln(')">ln</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-sci" onclick="appendValue('**')">x^y</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-sci" onclick="appendFunc('fact(')">n!</button></div>
+
+        <!-- İdarəetmə Düymələri -->
+        <div class="col-3"><button class="btn btn-calc btn-action" onclick="clearDisplay()">C</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-action" onclick="deleteLast()">DEL</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-sci" onclick="appendValue('(')">(</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-sci" onclick="appendValue(')')">)</button></div>
+
+        <!-- Rəqəmlər və Operatorlar -->
+        <div class="col-3"><button class="btn btn-calc btn-number" onclick="appendValue('7')">7</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-number" onclick="appendValue('8')">8</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-number" onclick="appendValue('9')">9</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-operator" onclick="appendValue('/')">÷</button></div>
+
+        <div class="col-3"><button class="btn btn-calc btn-number" onclick="appendValue('4')">4</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-number" onclick="appendValue('5')">5</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-number" onclick="appendValue('6')">6</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-operator" onclick="appendValue('*')">×</button></div>
+
+        <div class="col-3"><button class="btn btn-calc btn-number" onclick="appendValue('1')">1</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-number" onclick="appendValue('2')">2</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-number" onclick="appendValue('3')">3</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-operator" onclick="appendValue('-')">-</button></div>
+
+        <div class="col-3"><button class="btn btn-calc btn-number" onclick="appendValue('0')">0</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-number" onclick="appendValue('.')">.</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-equal" onclick="calculate()">=</button></div>
+        <div class="col-3"><button class="btn btn-calc btn-operator" onclick="appendValue('+')">+</button></div>
+    </div>
+</div>
+
+<script>
+    let display = document.getElementById('displayText');
+    let history = document.getElementById('historyText');
+    let currentInput = '';
+
+    function appendValue(val) {
+        if (display.innerText === '0' || display.innerText === 'Xəta') {
+            currentInput = '';
+        }
+        currentInput += val;
+        display.innerText = currentInput;
+    }
+
+    function appendFunc(funcName) {
+        if (display.innerText === '0' || display.innerText === 'Xəta') {
+            currentInput = '';
+        }
+        currentInput += funcName;
+        display.innerText = currentInput;
+    }
+
+    function clearDisplay() {
+        currentInput = '';
+        display.innerText = '0';
+        history.innerText = '';
+    }
+
+    function deleteLast() {
+        currentInput = currentInput.slice(0, -1);
+        display.innerText = currentInput || '0';
+    }
+
+    // Riyazi Faktorial Funksiyası
+    function fact(n) {
+        if (n < 0) return NaN;
+        if (n === 0 || n === 1) return 1;
+        let res = 1;
+        for (let i = 2; i <= n; i++) res *= i;
+        return res;
+    }
+
+    function calculate() {
+        try {
+            history.innerText = currentInput + ' =';
+            let parsedExpression = currentInput
+                .replace(/sin\(/g, 'Math.sin((Math.PI/180)*')
+                .replace(/cos\(/g, 'Math.cos((Math.PI/180)*')
+                .replace(/tan\(/g, 'Math.tan((Math.PI/180)*')
+                .replace(/sqrt\(/g, 'Math.sqrt(')
+                .replace(/log\(/g, 'Math.log10(')
+                .replace(/ln\(/g, 'Math.log(');
+
+            // `fact(n)` əməliyyatını emal etmək
+            parsedExpression = parsedExpression.replace(/fact\((\d+)\)/g, (match, p1) => fact(parseInt(p1)));
+
+            let result = eval(parsedExpression);
+            
+            // Dəqiqlik tənzimlənməsi (məs: 0.1 + 0.2 xətası üçün)
+            if (typeof result === 'number') {
+                result = Number(result.toFixed(8));
+            }
+
+            display.innerText = result;
+            currentInput = result.toString();
+        } catch (error) {
+            display.innerText = 'Xəta';
+            currentInput = '';
+        }
+    }
+
+    // Klaviatura Dəstəyi
+    document.addEventListener('keydown', function(e) {
+        if ((e.key >= '0' && e.key <= '9') || ['+', '-', '*', '/', '.', '(', ')'].includes(e.key)) {
+            appendValue(e.key);
+        } else if (e.key === 'Enter') {
+            calculate();
+        } else if (e.key === 'Backspace') {
+            deleteLast();
+        } else if (e.key === 'Escape') {
+            clearDisplay();
+        }
+    });
+</script>
+
+</body>
+</html>
